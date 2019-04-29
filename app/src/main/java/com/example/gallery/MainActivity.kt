@@ -3,32 +3,32 @@ package com.example.gallery
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.BaseAdapter
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.image_entry.view.*
-import android.content.pm.PackageManager
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.provider.MediaStore
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.database.Cursor
 import android.database.MergeCursor
 import android.graphics.Bitmap
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
-import android.support.v4.content.FileProvider
-import android.widget.Toast
-import java.io.File
-import java.io.IOException
+import android.provider.MediaStore
 import android.support.annotation.RequiresApi
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import android.support.v4.content.FileProvider
+import android.support.v7.app.AppCompatActivity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.Toast
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.image_entry.view.*
+import java.io.File
 import java.io.FileOutputStream
-import java.lang.Exception
+import java.io.IOException
 import java.util.*
 
 
@@ -98,20 +98,8 @@ class MainActivity : AppCompatActivity() {
             MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
             MediaStore.MediaColumns.DATE_MODIFIED
         )
-        val cursorExternal = contentResolver.query(
-            uriExternal,
-            projection,
-            "_data IS NOT NULL) GROUP BY (bucket_display_name",
-            null,
-            null
-        )
-        val cursorInternal = contentResolver.query(
-            uriInternal,
-            projection,
-            "_data IS NOT NULL) GROUP BY (bucket_display_name",
-            null,
-            null
-        )
+        val cursorExternal = this.createCursorExternal(uriExternal, projection)
+        val cursorInternal = this.createCursorInternal(uriInternal, projection)
         val cursorAlbum = MergeCursor(arrayOf(cursorExternal, cursorInternal))
 
         val imageList = ArrayList<Image>()
@@ -141,6 +129,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         return imageList
+    }
+
+    private fun createCursorInternal(uriInternal: Uri, projection: Array<String>): Cursor? {
+        return contentResolver.query(
+            uriInternal,
+            projection,
+            "_data IS NOT NULL) GROUP BY (bucket_display_name",
+            null,
+            null
+        )
+    }
+
+    private fun createCursorExternal(uriInternal: Uri, projection: Array<String>): Cursor? {
+        return contentResolver.query(
+            uriInternal,
+            projection,
+            "_data IS NOT NULL) GROUP BY (bucket_display_name",
+            null,
+            null
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
