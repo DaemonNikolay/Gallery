@@ -16,7 +16,10 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.provider.MediaStore
 import android.content.Intent
+import android.database.Cursor
+import android.database.MergeCursor
 import android.graphics.Bitmap
+import android.graphics.drawable.Icon
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.os.Build
@@ -28,6 +31,7 @@ import java.io.IOException
 import android.support.annotation.RequiresApi
 import java.io.FileOutputStream
 import java.lang.Exception
+import java.net.URI
 import java.util.*
 
 
@@ -44,7 +48,7 @@ class MainActivity : AppCompatActivity() {
     val REQUEST_TAKE_PHOTO = 1
 
 
-    @SuppressLint("InlinedApi")
+    @SuppressLint("InlinedApi", "Recycle")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -61,9 +65,6 @@ class MainActivity : AppCompatActivity() {
                     arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                     MY_PERMISSIONS_REQUEST_READ_CONTACTS
                 )
-
-                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                startActivityForResult(cameraIntent, CAMERA_REQUEST)
             }
         }
 
@@ -72,6 +73,7 @@ class MainActivity : AppCompatActivity() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+
             } else {
                 ActivityCompat.requestPermissions(
                     this,
@@ -81,12 +83,59 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        foodsList.add(Food("Coffee"))
-        foodsList.add(Food("Espersso"))
-        foodsList.add(Food("French Fires"))
-        foodsList.add(Food("Honey"))
-        foodsList.add(Food("Strawberry"))
-        foodsList.add(Food("Sugar cubes"))
+
+//        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+//        startActivityForResult(cameraIntent, CAMERA_REQUEST)
+
+
+        val uriExternal = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val uriInternal = android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI
+
+        val projection = arrayOf(
+            MediaStore.MediaColumns.DATA,
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+            MediaStore.MediaColumns.DATE_MODIFIED
+        )
+        val cursorExternal = contentResolver.query(
+            uriExternal,
+            projection,
+            "_data IS NOT NULL) GROUP BY (bucket_display_name",
+            null,
+            null
+        )
+        val cursorInternal = contentResolver.query(
+            uriInternal,
+            projection,
+            "_data IS NOT NULL) GROUP BY (bucket_display_name",
+            null,
+            null
+        )
+        val cursor = MergeCursor(arrayOf(cursorExternal, cursorInternal))
+
+        while (cursor.moveToNext()) {
+            val album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME))
+
+            val cursorExternal1 = contentResolver.query(
+                uriExternal, projection,
+                "bucket_display_name = \"$album\"", null, null
+            )
+            val cursorInternal1 = contentResolver.query(
+                uriInternal, projection,
+                "bucket_display_name = \"$album\"", null, null
+            )
+
+            val cursor1 = MergeCursor(arrayOf(cursorExternal1, cursorInternal1))
+            while (cursor1.moveToNext()) {
+                val path = cursor1.getString(cursor1.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
+
+                foodsList.add((Food(path)))
+
+                break
+            }
+
+            break
+        }
+        
         adapter = FoodAdapter(this, foodsList)
 
         galleryGridView.adapter = adapter
@@ -168,7 +217,7 @@ class MainActivity : AppCompatActivity() {
 
             val inflator = context!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             val foodView = inflator.inflate(R.layout.food_entry, null)
-            foodView.tvName.text = food.name!!
+            foodView.tvName.setImageURI(Uri.fromFile(File(food.name)))
 
             return foodView
         }
