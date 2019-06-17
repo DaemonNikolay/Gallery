@@ -49,14 +49,11 @@ class MainActivity : AppCompatActivity() {
                 val imageList = this.generateImageList()
                 adapter = ImageAdapter(this, imageList)
                 galleryGridView.adapter = adapter
+
             } else if (it.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && grantResults[index] == -1) {
                 toast("Разрешения на доступ к файлам нет - галерея не фурычит...")
             }
         }
-
-        Log.d("", "00000000000 $requestCode")
-        Log.d("", "00000000000 ${permissions.asList()}")
-        Log.d("", "00000000000 ${grantResults.asList()}")
     }
 
     fun Context.toast(message: CharSequence) =
@@ -89,33 +86,10 @@ class MainActivity : AppCompatActivity() {
             Log.d("", "4444444444444444444")
         }
 
-//        if (ContextCompat.checkSelfPermission(
-//                this, Manifest.permission.READ_EXTERNAL_STORAGE
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-//
-//            } else {
-//                ActivityCompat.requestPermissions(
-//                    this,
-//                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-//                    PERMISSIONS_REQUEST_EXTERNAL_STORAGE
-//                )
-//            }
-//        }
-
-
         // Отвечает за камеру
 //        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 //        startActivityForResult(cameraIntent, CAMERA_REQUEST)
         // ----- Отвечает за камеру -----
-
-
-//        val imageList = this.generateImageList()
-
-//        adapter = ImageAdapter(this, imageList)
-
-//        galleryGridView.adapter = adapter
     }
 
     private fun generateImageList(): ArrayList<Image> {
@@ -148,11 +122,15 @@ class MainActivity : AppCompatActivity() {
             val cursorImage = MergeCursor(arrayOf(cursorExternal1, cursorInternal1))
             while (cursorImage.moveToNext()) {
                 val path = cursorImage.getString(cursorImage.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
-                imageList.add((Image(path)))
+                imageList.add(Image(path))
 
                 // todo: нужно брать изображения не из общей галереи, а из кастомной директории, куда будут лететь фотографии
                 break
             }
+
+            val iconPlus = resources.getDrawable(R.drawable.icon_plus)
+
+            imageList.add(Image("", iconPlus))
 
             break
         }
@@ -250,11 +228,15 @@ class MainActivity : AppCompatActivity() {
 
         @SuppressLint("ViewHolder", "InflateParams")
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val image = this.imagesList[position]
-
             val inflator = context!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             val imageView = inflator.inflate(R.layout.image_entry, null)
-            imageView.path.setImageURI(Uri.fromFile(File(image.path)))
+
+            if (this.imagesList[position].image != null) {
+                imageView.path.setImageDrawable(this.imagesList[position].image)
+            } else {
+                val image = this.imagesList[position]
+                imageView.path.setImageURI(Uri.fromFile(File(image.path)))
+            }
 
             return imageView
         }

@@ -1,5 +1,8 @@
 package com.example.gallery
 
-class Image(name: String) {
-    var path: String? = name
+import android.graphics.drawable.Drawable
+
+class Image(pathIntoDevice: String, image: Drawable? = null) {
+    var path: String? = pathIntoDevice
+    var image: Drawable? = image
 }
