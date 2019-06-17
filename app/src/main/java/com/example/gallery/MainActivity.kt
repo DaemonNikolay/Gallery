@@ -19,6 +19,7 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,6 +41,27 @@ class MainActivity : AppCompatActivity() {
     private val REQUEST_TAKE_PHOTO = 1
 
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        permissions.forEachIndexed { index, it ->
+            if (it.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && grantResults[index] == 0) {
+                val imageList = this.generateImageList()
+                adapter = ImageAdapter(this, imageList)
+                galleryGridView.adapter = adapter
+            } else if (it.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && grantResults[index] == -1) {
+                toast("Разрешения на доступ к файлам нет - галерея не фурычит...")
+            }
+        }
+
+        Log.d("", "00000000000 $requestCode")
+        Log.d("", "00000000000 ${permissions.asList()}")
+        Log.d("", "00000000000 ${grantResults.asList()}")
+    }
+
+    fun Context.toast(message: CharSequence) =
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
     @SuppressLint("InlinedApi", "Recycle")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,31 +71,38 @@ class MainActivity : AppCompatActivity() {
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
 
+            Log.d("", "11111111111111111")
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                Log.d("", "22222222222222222")
             } else {
+                Log.d("", "33333333333333333333333")
+
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                     PERMISSIONS_REQUEST_EXTERNAL_STORAGE
                 )
             }
+        } else {
+            Log.d("", "4444444444444444444")
         }
 
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.READ_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-
-            } else {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    PERMISSIONS_REQUEST_EXTERNAL_STORAGE
-                )
-            }
-        }
+//        if (ContextCompat.checkSelfPermission(
+//                this, Manifest.permission.READ_EXTERNAL_STORAGE
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+//
+//            } else {
+//                ActivityCompat.requestPermissions(
+//                    this,
+//                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+//                    PERMISSIONS_REQUEST_EXTERNAL_STORAGE
+//                )
+//            }
+//        }
 
 
         // Отвечает за камеру
@@ -82,11 +111,11 @@ class MainActivity : AppCompatActivity() {
         // ----- Отвечает за камеру -----
 
 
-        val imageList = this.generateImageList()
+//        val imageList = this.generateImageList()
 
-        adapter = ImageAdapter(this, imageList)
+//        adapter = ImageAdapter(this, imageList)
 
-        galleryGridView.adapter = adapter
+//        galleryGridView.adapter = adapter
     }
 
     private fun generateImageList(): ArrayList<Image> {
