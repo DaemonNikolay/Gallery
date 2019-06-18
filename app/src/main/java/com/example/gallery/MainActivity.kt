@@ -86,7 +86,9 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         } else {
-            Log.d("", "4444444444444444444")
+            val imageList = this.generateImageList()
+            adapter = ImageAdapter(this, imageList)
+            galleryGridView.adapter = adapter
         }
     }
 
@@ -121,17 +123,11 @@ class MainActivity : AppCompatActivity() {
             while (cursorImage.moveToNext()) {
                 val path = cursorImage.getString(cursorImage.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
                 imageList.add(Image(path))
-
-                // todo: нужно брать изображения не из общей галереи, а из кастомной директории, куда будут лететь фотографии
-                break
             }
-
-            val iconPlus = resources.getDrawable(R.drawable.icon_plus)
-
-            imageList.add(Image("", iconPlus))
-
-            break
         }
+
+        val iconPlus = resources.getDrawable(R.drawable.icon_plus)
+        imageList.add(Image("", iconPlus))
 
         return imageList
     }
