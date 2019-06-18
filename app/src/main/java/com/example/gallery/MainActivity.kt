@@ -44,7 +44,13 @@ class MainActivity : AppCompatActivity() {
 
     private val _PERMISSIONS_REQUEST_EXTERNAL_STORAGE = 1
     private val _REQUEST_TAKE_PHOTO = 1
+    private val _CAMERA_REQUEST = 1
 
+
+    fun camera() {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivityForResult(cameraIntent, this._CAMERA_REQUEST)
+    }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -53,7 +59,12 @@ class MainActivity : AppCompatActivity() {
             if (it.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && grantResults[index] == 0) {
                 val imageList = this.generateImageList()
                 adapter = ImageAdapter(this, imageList)
+
                 galleryGridView.adapter = adapter
+
+
+//                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+//                startActivityForResult(cameraIntent, this._CAMERA_REQUEST)
 
             } else if (it.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && grantResults[index] == -1) {
                 toast("Разрешения на доступ к файлам нет - галерея не фурычит...")
@@ -228,10 +239,13 @@ class MainActivity : AppCompatActivity() {
 
             if (this.imagesList[position].image != null) {
                 imageView.path.setImageDrawable(this.imagesList[position].image)
+                imageView.tag = "gifodhgufd"
                 imageView.setOnClickListener {
+
                     val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-//                    startIntentSenderForResult()
-//                    startActivityForResult(cameraIntent, this._CAMERA_REQUEST)
+                    startActivityForResult(Activity(), cameraIntent, this._CAMERA_REQUEST)
+
+                    Log.d("", "gfdgfdghfdhrt = ${it.tag}")
                 }
             } else {
                 val image = this.imagesList[position]
@@ -249,6 +263,8 @@ class MainActivity : AppCompatActivity() {
                     buttonCancel.setOnClickListener {
                         dialog.dismiss()
                     }
+
+                    Log.d("", "jhjhgjhgjhjhgjhgjhg = ${it.id}")
 
                     dialog.show()
                 }
