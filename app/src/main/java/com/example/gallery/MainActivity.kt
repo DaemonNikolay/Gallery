@@ -2,6 +2,8 @@ package com.example.gallery
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,15 +18,18 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.support.annotation.RequiresApi
 import android.support.v4.app.ActivityCompat
+import android.support.v4.app.ActivityCompat.startActivityForResult
+import android.support.v4.app.ActivityCompat.startIntentSenderForResult
 import android.support.v4.content.ContextCompat
+import android.support.v4.content.ContextCompat.getSystemService
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import android.widget.Toast
+import android.view.Window
+import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.image_entry.view.*
 import java.io.File
@@ -37,8 +42,8 @@ class MainActivity : AppCompatActivity() {
 
     private var adapter: ImageAdapter? = null
 
-    private val PERMISSIONS_REQUEST_EXTERNAL_STORAGE = 1
-    private val REQUEST_TAKE_PHOTO = 1
+    private val _PERMISSIONS_REQUEST_EXTERNAL_STORAGE = 1
+    private val _REQUEST_TAKE_PHOTO = 1
 
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -69,27 +74,20 @@ class MainActivity : AppCompatActivity() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
 
-            Log.d("", "11111111111111111")
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                Log.d("", "22222222222222222")
-            } else {
-                Log.d("", "33333333333333333333333")
-
+            if (!ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+            ) {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    PERMISSIONS_REQUEST_EXTERNAL_STORAGE
+                    _PERMISSIONS_REQUEST_EXTERNAL_STORAGE
                 )
             }
         } else {
             Log.d("", "4444444444444444444")
         }
-
-        // Отвечает за камеру
-//        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-//        startActivityForResult(cameraIntent, CAMERA_REQUEST)
-        // ----- Отвечает за камеру -----
     }
 
     private fun generateImageList(): ArrayList<Image> {
@@ -206,13 +204,14 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoFile)
-                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO)
+                startActivityForResult(takePictureIntent, _REQUEST_TAKE_PHOTO)
             }
         }
     }
 
     class ImageAdapter(context: Context, private var imagesList: ArrayList<Image>) : BaseAdapter() {
-        var context: Context? = context
+        private var _context: Context? = context
+        private val _CAMERA_REQUEST = 1
 
         override fun getCount(): Int {
             return imagesList.size
@@ -228,14 +227,35 @@ class MainActivity : AppCompatActivity() {
 
         @SuppressLint("ViewHolder", "InflateParams")
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val inflator = context!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val inflator = _context!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             val imageView = inflator.inflate(R.layout.image_entry, null)
 
             if (this.imagesList[position].image != null) {
                 imageView.path.setImageDrawable(this.imagesList[position].image)
+                imageView.setOnClickListener {
+                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+//                    startIntentSenderForResult()
+//                    startActivityForResult(cameraIntent, this._CAMERA_REQUEST)
+                }
             } else {
                 val image = this.imagesList[position]
                 imageView.path.setImageURI(Uri.fromFile(File(image.path)))
+                imageView.setOnClickListener {
+                    val dialog = Dialog(this._context)
+                    dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+                    dialog.setCancelable(false)
+                    dialog.setContentView(R.layout.image_view)
+
+                    val popupImage = dialog.findViewById<View>(R.id.image) as ImageView
+                    popupImage.setImageURI(Uri.fromFile(File(image.path)))
+
+                    val buttonCancel = dialog.findViewById<View>(R.id.button_cancel) as Button
+                    buttonCancel.setOnClickListener {
+                        dialog.dismiss()
+                    }
+
+                    dialog.show()
+                }
             }
 
             return imageView
